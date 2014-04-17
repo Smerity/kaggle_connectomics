@@ -1,0 +1,36 @@
+'''Author: 		mlwave.com'''
+'''Description:	Python benchmark code for Pearson Correlation with Descretization, in use for Kaggle Connectomics Contest'''
+import brainparse as bp
+import scipy.stats as stats
+from datetime import datetime
+import sys
+start = datetime.now()
+last = datetime.now()
+
+flurofn, posfn, networkfn = sys.argv[1:]
+neuron_activities = bp.parse_time_series(flurofn)
+neuron_activities = bp.discretize_time_series(neuron_activities, threshold=0.12)
+neuron_positions = bp.parse_neuron_positions(posfn)
+predictions_loc = "kaggle_preds.csv"
+
+
+def create_predictions(predictions_loc, neuron_activities, neuron_positions, start=datetime.now(), last=datetime.now()):
+  print "\nWriting:", predictions_loc
+  cache = {}
+  with open(predictions_loc, "wb") as outfile:
+    outfile.write("NET_neuronI_neuronJ,Strength\n")
+    for e, neuron_i_id in enumerate(xrange(len(neuron_positions))):
+      for neuron_j_id, neuron_position in neuron_positions.items():
+        if (neuron_i_id, neuron_j_id) in cache:
+          outfile.write("valid_" + str(neuron_i_id + 1) + "_" + str(neuron_j_id + 1) + "," + cache[(neuron_i_id, neuron_j_id)] + "\n")
+        elif neuron_i_id == neuron_j_id:
+          outfile.write("valid_" + str(neuron_i_id + 1) + "_" + str(neuron_j_id + 1) + ",0\n")
+        else:
+          corr = str(stats.pearsonr(neuron_activities[neuron_i_id], neuron_activities[neuron_j_id])[0])
+          print corr
+          cache[(neuron_j_id, neuron_i_id)] = corr
+          outfile.write("valid_" + str(neuron_i_id + 1) + "_" + str(neuron_j_id + 1) + "," + corr + "\n")
+      print e + 1, "/", len(neuron_positions), "\t", datetime.now() - start, "\t", datetime.now() - last
+      last = datetime.now()
+
+create_predictions(predictions_loc, neuron_activities, neuron_positions, start, last)
