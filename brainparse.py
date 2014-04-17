@@ -5,17 +5,19 @@ import numpy as np
 #input a fluoresence file location, output a dictionary with dict[neuron_id] = [activity_at_1, ... n]
 def parse_time_series(loc_file_F):
   print "\nReading:", loc_file_F
-  neuron_time_series = defaultdict(list)
+  neuron_time_series = defaultdict(lambda: np.zeros(179500))
   for timestep, line in enumerate(open(loc_file_F)):
+    if timestep % 5000 == 0:
+      print 'Up to timestep {}...'.format(timestep)
     for neuron_id, neuron_activity in enumerate(line.strip().split(",")):
-      neuron_time_series[neuron_id].append(float(neuron_activity))
+      neuron_time_series[neuron_id][timestep] = float(neuron_activity)
   return neuron_time_series
 
 def discretize_time_series(time_series, threshold=0.12):
   print "\nDiscretizing", len(time_series), "timeseries"
   discretized = {}
   for k, v in time_series.items():
-    discretized[k] = np.array([1 if f > threshold else 0 for f in list(np.diff(v, axis=0))])
+    discretized[k] = np.diff(v, axis=0) > threshold
     del time_series[k]
   return discretized
 
