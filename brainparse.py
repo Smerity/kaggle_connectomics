@@ -13,6 +13,22 @@ def parse_time_series(loc_file_F):
       neuron_time_series[neuron_id][timestep] = float(neuron_activity)
   return neuron_time_series
 
+
+def normalize_time_series(time_series):
+  normalized = {}
+  for k, v in time_series.items():
+    normalized[k] = v / np.sum(v)
+  return normalized
+
+
+def blur_time_series(time_series):
+  blurred = {}
+  for k, v in time_series.items():
+    #blurred[k] = 0.5 * (np.append(v[1:], [0])) + v + 0.5 * (np.append([0], v[:-1]))
+    blurred[k] = v + 0.5 * (np.append([0], v[:-1])) + 0.2 * (np.append([0, 0], v[:-2]))
+  return blurred
+
+
 def discretize_time_series(time_series, threshold=0.12):
   print "\nDiscretizing", len(time_series), "timeseries"
   discretized = {}
