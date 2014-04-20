@@ -1,5 +1,3 @@
-'''Author: 		mlwave.com'''
-'''Description:	Python benchmark code for Pearson Correlation with Descretization, in use for Kaggle Connectomics Contest'''
 import brainparse as bp
 import scipy.stats as stats
 from sklearn import metrics
@@ -9,11 +7,15 @@ import sys
 start = datetime.now()
 last = datetime.now()
 
+CALC_SCORE = len(sys.argv[1:]) > 2
 JUST_SCORE = False
 
 predictions_loc = "kaggle_preds.csv"
-flurofn, posfn = sys.argv[1:]
-#flurofn, posfn, networkfn = sys.argv[1:]
+if CALC_SCORE:
+  flurofn, posfn = sys.argv[1:]
+else:
+  flurofn, posfn, networkfn = sys.argv[1:]
+
 if not JUST_SCORE:
   neuron_activities = bp.parse_time_series(flurofn)
   neuron_activities = bp.discretize_time_series(neuron_activities, threshold=0.12)
@@ -82,4 +84,5 @@ def get_auc(goldfn, kaggle, n=1000):
 
 if not JUST_SCORE:
   create_predictions(predictions_loc, neuron_activities, neuron_positions, start, last)
-#print 'AUC={}'.format(get_auc(networkfn, 'kaggle_preds.csv', n=100))
+if CALC_SCORE:
+  print 'AUC={}'.format(get_auc(networkfn, 'kaggle_preds.csv', n=1000))
